@@ -6,6 +6,7 @@ import torch
 
 from evaluate import evaluate_HIV, evaluate_HIV_population
 from train import ProjectAgent  # Replace DummyAgent with your agent implementation
+from my_train import DQN, ReplayBuffer, NeuralNetwork
 
 
 def seed_everything(seed: int = 42):
@@ -24,7 +25,19 @@ if __name__ == "__main__":
     if not file.is_file():
         seed_everything(seed=42)
         # Initialization of the agent. Replace DummyAgent with your custom agent implementation.
-        agent = ProjectAgent()
+        agent = DQN(number_of_layers = 7,
+            number_of_neurons = [6, 64, 128, 256, 256, 128, 64, 4],
+            buffer_size = 60000, 
+            batch_size = 1024, 
+            gamma = 0.98, 
+            epsilon_decay = 100, 
+            epsilon_decay_period = 15000,
+            epsilon_min = 0.01, 
+            epsilon_max = 1.0, 
+            learning_rate = 0.001,
+            loss = torch.nn.SmoothL1Loss(),
+            gradient_steps = 2,
+            update_target_freq = 800)
         agent.load()
         # Evaluate agent and write score.
         score_agent: float = evaluate_HIV(agent=agent, nb_episode=5)

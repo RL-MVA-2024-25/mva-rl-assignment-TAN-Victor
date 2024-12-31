@@ -1,5 +1,6 @@
 from gymnasium.wrappers import TimeLimit
 from env_hiv import HIVPatient
+import torch
 
 env = TimeLimit(
     env=HIVPatient(domain_randomization=False), max_episode_steps=200
