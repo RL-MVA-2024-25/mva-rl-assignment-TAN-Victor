@@ -26,17 +26,18 @@ if __name__ == "__main__":
         # Initialization of the agent. Replace DummyAgent with your custom agent implementation.
         agent = DQN(number_of_layers = 8,
             number_of_neurons = [6, 128, 256, 256, 512, 256, 256, 128, 4],
-            buffer_size = 60000, 
-            batch_size = 1024, 
-            gamma = 0.99, 
-            epsilon_decay = 1200, 
-            epsilon_decay_period = 18000,
+            buffer_size = 20000, 
+            batch_size = 512, 
+            gamma = 0.98, 
+            epsilon_decay = 600, 
+            epsilon_decay_period = 20000,
             epsilon_min = 0.05, 
             epsilon_max = 1.0, 
-            learning_rate = 0.001,
+            learning_rate = 0.01,
             loss = torch.nn.SmoothL1Loss(),
             gradient_steps = 5,
-            update_target_freq = 800)
+            update_target_freq = 500,
+            update_tau = 0.0008)
         agent.load()
         # Evaluate agent and write score.
         score_agent: float = evaluate_HIV(agent=agent, nb_episode=5)

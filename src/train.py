@@ -6,7 +6,7 @@ import torch
 import random
 import os
 import numpy as np
-# from tqdm import tqdm
+from tqdm import tqdm
 
 env = TimeLimit(
     env=HIVPatient(domain_randomization=True), max_episode_steps=200
@@ -69,13 +69,15 @@ class ReplayBuffer:
 
 
 class DQN():
-    def __init__(self, number_of_layers: int, number_of_neurons: list, buffer_size: int, batch_size: int, gamma: float, epsilon_decay: float, epsilon_decay_period: float, epsilon_min: float, epsilon_max: float, learning_rate: float, loss: torch.nn.Module, gradient_steps: int, update_target_freq: int):
+    def __init__(self, number_of_layers: int, number_of_neurons: list, buffer_size: int, batch_size: int, gamma: float, epsilon_decay: float, epsilon_decay_period: float, epsilon_min: float, epsilon_max: float, learning_rate: float, loss: torch.nn.Module, gradient_steps: int, update_target_freq: int, update_tau: float):
         self.device = DEVICE
         self.number_of_layers = number_of_layers
         self.number_of_neurons = number_of_neurons
         self.model = NeuralNetwork(number_of_layers, number_of_neurons).to(self.device)
         self.target_model = NeuralNetwork(number_of_layers, number_of_neurons).to(self.device)
+        self.target_model.eval()
         self.update_target_freq = update_target_freq
+        self.update_tau = update_tau
         self.path = "models"
 
         self.buffer_size = buffer_size
@@ -115,7 +117,7 @@ class DQN():
                 print(f"No model found at {string_name}.")
             else:
                 print("Model found, loading")
-                self.model.load_state_dict(torch.load(string_name, map_location=self.device))
+                self.model.load_state_dict(torch.load(string_name, map_location=self.device, weights_only=True))
 
     def gradient_step(self):
         if len(self.buffer) > self.batch_size:
@@ -136,6 +138,7 @@ class DQN():
         best_return = -float("inf")
         eval_return = []
         episode = 0
+
         try:
             state, _ = env.reset()
             episode_cum_reward = 0
@@ -154,8 +157,12 @@ class DQN():
     
                 for _ in range(self.gradient_steps):
                     self.gradient_step()
-                if step % self.update_target_freq == 0:
-                    self.target_model.load_state_dict(self.model.state_dict())
+                target_state_dict = self.target_model.state_dict()
+                model_state_dict = self.model.state_dict()
+                tau = self.update_tau
+                for key in model_state_dict:
+                    target_state_dict[key] = tau*model_state_dict[key] + (1-tau)*target_state_dict[key]
+                self.target_model.load_state_dict(target_state_dict)
     
                 step += 1
                 if done or trunc:
