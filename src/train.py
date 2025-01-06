@@ -6,7 +6,6 @@ import torch
 import random
 import os
 import numpy as np
-from tqdm import tqdm
 
 env = TimeLimit(
     env=HIVPatient(domain_randomization=True), max_episode_steps=200
