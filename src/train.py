@@ -67,32 +67,32 @@ class ReplayBuffer:
     
 
 
-class DQN():
-    def __init__(self, number_of_layers: int, number_of_neurons: list, buffer_size: int, batch_size: int, gamma: float, epsilon_decay: float, epsilon_decay_period: float, epsilon_min: float, epsilon_max: float, learning_rate: float, loss: torch.nn.Module, gradient_steps: int, update_target_freq: int, update_tau: float):
+class ProjectAgent():
+    def __init__(self):
         self.device = DEVICE
-        self.number_of_layers = number_of_layers
-        self.number_of_neurons = number_of_neurons
-        self.model = NeuralNetwork(number_of_layers, number_of_neurons).to(self.device)
-        self.target_model = NeuralNetwork(number_of_layers, number_of_neurons).to(self.device)
+        self.number_of_layers = 8
+        self.number_of_neurons = [6, 128, 256, 256, 512, 256, 256, 128, 4]
+        self.model = NeuralNetwork(self.number_of_layers, self.number_of_neurons).to(self.device)
+        self.target_model = NeuralNetwork(self.number_of_layers, self.number_of_neurons).to(self.device)
         self.target_model.eval()
-        self.update_target_freq = update_target_freq
-        self.update_tau = update_tau
+        self.update_target_freq = 500
+        self.update_tau = 0.0008
         self.path = "models"
 
-        self.buffer_size = buffer_size
-        self.buffer = ReplayBuffer(buffer_size)
-        self.batch_size = batch_size
-        self.gamma = gamma
-        self.epsilon_min = epsilon_min
-        self.epsilon_max = epsilon_max
-        self.epsilon_step = (epsilon_max - epsilon_min) / epsilon_decay_period
-        self.epsilon_decay = epsilon_decay
+        self.buffer_size = 20000
+        self.buffer = ReplayBuffer(self.buffer_size)
+        self.batch_size = 512
+        self.gamma = 0.98
+        self.epsilon_min = 0.05
+        self.epsilon_max = 1.0
+        self.epsilon_step = (self.epsilon_max - self.epsilon_min) / 20000
+        self.epsilon_decay = 600
 
-        self.gradient_steps = gradient_steps
-        self.learning_rate = learning_rate
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=learning_rate)
-        self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, step_size=20 * 200 * gradient_steps, gamma = 0.97)
-        self.loss = loss
+        self.gradient_steps = 5
+        self.learning_rate = 0.01
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
+        self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, step_size=20 * 200 * self.gradient_steps, gamma = 0.97)
+        self.loss = torch.nn.SmoothL1Loss()
 
     def act(self, observation, use_random=False):
         # if use_random and random.random() < self.epsilon:     # Never used 
